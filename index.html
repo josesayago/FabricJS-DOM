@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+	<head>
+		<title>FabricJS to DOM : Prueba Concepto</title>
+		<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+		<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/fabric.js/1.4.13/fabric.min.js"></script>
+		<!-- Latest compiled and minified CSS -->
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+		<!-- Optional theme -->
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
+		<!-- Latest compiled and minified JavaScript -->
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+	</head>
+	<body>
+		<div class="container-fluid">
+			<div class="col-md-12">
+				<canvas id="editor"></canvas>
+			</div>
+			<div class="col-md-12">
+				<div class="row text-center">
+					<hr />
+					<button class="addrow btn btn-default">Row</button>
+					<hr />
+				</div>
+				<div class="clearfix"></div>
+				<div class="row">
+					<div id="dom"></div>
+				</div>
+			</div>
+		</div>
+		<script type="text/javascript">
+			jQuery(document).ready(function(){
+				var _stage = new fabric.Canvas('editor');
+				var _dom = jQuery('#dom');
+				var _w = jQuery('.col-md-12').width();
+				var _h = ( jQuery(window).height() )/2;
+				_stage.setDimensions({
+					width: _w,
+					height: _h
+				});
+				jQuery('#editor').css({
+					width: _w,
+					height: _h,
+				});
+				jQuery('.addrow').unbind('click tap').on('click tap', function(){
+					_setRow();
+				});
+				function _setRow() {
+					var _rect = new fabric.Rect({
+						id: 'row-'+_countObjects(),
+						left: _w/2,
+						top: _h/2,
+						fill: 'rgba(230,220,200,0.8)',
+						width: 40,
+						height: 40
+					});
+					_dom.append('<div class="row-'+_countObjects()+'"></div>');
+					_stage.add( _rect );
+				}
+				_stage.on({
+					'object:moving': _getHit,
+					'object:scaling': _setDivs
+				});
+
+				function _getHit(_opts) {
+				    _opts.target.setCoords();
+				    _stage.forEachObject(function(_obj) {
+				     	if (_obj === _opts.target) return;
+				      	_obj.setOpacity(_opts.target.intersectsWithObject(_obj) ? 0.5 : 1);
+				      	if( _opts.target.isContainedWithinRect( _obj.oCoords.tl, _obj.oCoords.br ) ) {
+				      		if( jQuery('.'+_obj.id).find( '.'+_opts.target.id ).length == 0 ) {
+				      			jQuery('.'+_opts.target.id).detach().appendTo(jQuery('.'+_obj.id));
+				      		} 
+				      	} else {
+				      		if( jQuery('.'+_obj.id).find( '.'+_opts.target.id ).length > 0 ) {
+				      			jQuery('.'+_opts.target.id).detach().appendTo(jQuery('.'+_obj.id).parent());
+				      		}
+				      	}
+				    });
+				}
+				function _setDivs() {
+					var _objID = _stage.getActiveObject().id;
+					jQuery('.'+_objID).css({
+						width: _stage.getActiveObject().getWidth(),
+						height: _stage.getActiveObject().getHeight(),
+						border: '1px solid #ccc',
+					});
+				}
+				function _countObjects() {
+					var _count = _stage.getObjects();
+					return _count.length;
+				}
+			});
+		</script>
+		<style type="text/css">
+			#editor {
+				border: 1px solid #ccc;
+			}
+		</style>
+	</body>
+</html>
